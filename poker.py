@@ -1,5 +1,6 @@
 import random
 import time
+
 # Cards
 cardPile = []
 tableCards = []
@@ -7,18 +8,19 @@ ComputerCards = []
 PlayerCards = []
 rounds = 1
 
+
 # - Test Zone
-#testCards = []
-#c10_1 = {"value": 10, "type": "♢", "name": "10", "img": "🂪"}
-#c11_1 = {"value": 11, "type": "♢", "name": "J", "img": "🂫"}
-#c12_1 = {"value": 12, "type": "♢", "name": "Q", "img": "🂬"}
-#c13_1 = {"value": 13, "type": "♢", "name": "K", "img": "🂮"}
-#c14_1 = {"value": 14, "type": "♢", "name": "A", "img": "🂾"}
-#testCards.append(c10_1)
-#testCards.append(c11_1)
-#testCards.append(c12_1)
-#testCards.append(c13_1)
-#testCards.append(c14_1)
+# testCards = []
+# c10_1 = {"value": 10, "type": "♢", "name": "10", "img": "🂪"}
+# c11_1 = {"value": 11, "type": "♢", "name": "J", "img": "🂫"}
+# c12_1 = {"value": 12, "type": "♢", "name": "Q", "img": "🂬"}
+# c13_1 = {"value": 13, "type": "♢", "name": "K", "img": "🂮"}
+# c14_1 = {"value": 14, "type": "♢", "name": "A", "img": "🂾"}
+# testCards.append(c10_1)
+# testCards.append(c11_1)
+# testCards.append(c12_1)
+# testCards.append(c13_1)
+# testCards.append(c14_1)
 
 
 # --------------------------------------------------------------#
@@ -66,16 +68,15 @@ def showAll():
     print("Table")
     showCards(tableCards)
     print(" ______ ______ ______ ______ ______ ______ ______")
-    time.sleep(3)  # Sleep for 3 seconds
+    time.sleep(1.5)  # Wait
     print("Computer")
     showCards(ComputerCards)
     print(" ______ ______ ______ ______ ______ ______ ______")
-    time.sleep(3)  # Sleep for 3 seconds
+    time.sleep(1.5)  # Wait
     print("Player")
     showCards(PlayerCards)
     print(" ______ ______ ______ ______ ______ ______ ______")
-    time.sleep(5)  # Sleep for 3 seconds
-
+    time.sleep(3)  # Wait
 
 
 # --------------------------------------------------------------#
@@ -89,9 +90,10 @@ def showAllAfter():
     print("Player")
     showCards(PlayerCards)
     print(" ______ ______ ______ ______ ______ ______ ______")
-    time.sleep(5)  # Sleep for 3 seconds
+    time.sleep(1.5)  # Wait
 
 
+# ---------------------------------------------------------------#
 def space():
     index = 0
     while index <= 15:
@@ -100,17 +102,32 @@ def space():
 
 
 # --------------------------------------------------------------#
-def winner():
-    deckStatsOfPlayer = checkDeckStats(PlayerCards)
-    deckStatsOfComputer = checkDeckStats(ComputerCards)
-    #testDeck = checkDeckStats(testCards)
-    print("Comp: Hand Value: {}".format(deckStatsOfComputer['HandValue']))
-    print("Play: Hand Value: {}".format(deckStatsOfPlayer['HandValue']))
-    print(" ______ ______ ______ ______ ______ ______ ______")
-    #print(testDeck['HandValue'])
+def initialCardsCompare(deckStatsOfPlayer, deckStatsOfComputer):
+    if deckStatsOfPlayer['HighCard'] > deckStatsOfComputer['HighCard']:  # Pair - Player
+        message(1)
+
+    elif deckStatsOfPlayer['HighCard'] < deckStatsOfComputer['HighCard']:  # Pair - Computer
+        message(2)
+
+    elif deckStatsOfPlayer['LowCard'] > deckStatsOfComputer[
+        'LowCard']:  # Low Card ( The Lower Card if High Card is Equal )
+        message(1)
+
+    elif deckStatsOfPlayer['LowCard'] < deckStatsOfComputer['LowCard']:  # Low Card
+        message(2)
+
+    else:
+        print("  _______   _          _  ")
+        print(" |__   __| (_)        | | ")
+        print("    | |     _    ___  | | ")
+        print("    | |    | |  / _ \ | | ")
+        print("    | |    | | |  __/ |_| ")
+        print("    |_|    |_|  \___| (_) ")
 
 
-    if deckStatsOfPlayer['HandValue'] > deckStatsOfComputer['HandValue']:
+# --------------------------------------------------------------#
+def message(x):
+    if x == 1:
         print("__     __                   __          __  _           _   ")
         print("\ \   / /                   \ \        / / (_)         | |  ")
         print(" \ \_/ /    ___    _   _     \ \  /\  / /   _   _ __   | |  ")
@@ -118,7 +135,7 @@ def winner():
         print("   | |    | (_) | | |_| |      \  /\  /    | | | | | | |_|  ")
         print("   |_|     \___/   \__,_|       \/  \/     |_| |_| |_| (_)  ")
 
-    elif deckStatsOfPlayer['HandValue'] < deckStatsOfComputer['HandValue']:
+    elif x == 2:
         print(" __     __                    _                             _  ")
         print(" \ \   / /                   | |                           | | ")
         print("  \ \_/ /    ___    _   _    | |        ___    ___    ___  | | ")
@@ -126,28 +143,83 @@ def winner():
         print("    | |    | (_) | | |_| |   | |____  | (_) | \__ \ |  __/ |_| ")
         print("    |_|     \___/   \__,_|   |______|  \___/  |___/  \___| (_) ")
 
+
+# --------------------------------------------------------------#
+def flushCardsCompare(deckStatsOfPlayer, deckStatsOfComputer):
+    if deckStatsOfPlayer['HighCardType'] == deckStatsOfPlayer['FlushType'] and deckStatsOfComputer['HighCardType'] == \
+            deckStatsOfPlayer['FlushType']:
+        initialCardsCompare(deckStatsOfPlayer, deckStatsOfComputer)
+
+    elif deckStatsOfPlayer['HighCardType'] == deckStatsOfPlayer['FlushType'] and deckStatsOfComputer['LowCardType'] == \
+            deckStatsOfPlayer['FlushType']:
+        initialCardsCompare(deckStatsOfPlayer, deckStatsOfComputer)
+
+    elif deckStatsOfPlayer['LowCardType'] == deckStatsOfPlayer['FlushType'] and deckStatsOfComputer['HighCardType'] == \
+            deckStatsOfPlayer['FlushType']:
+        initialCardsCompare(deckStatsOfPlayer, deckStatsOfComputer)
+
+    elif deckStatsOfPlayer['LowCardType'] == deckStatsOfPlayer['FlushType'] and deckStatsOfComputer['LowCardType'] == \
+            deckStatsOfPlayer['FlushType']:
+        initialCardsCompare(deckStatsOfPlayer, deckStatsOfComputer)
+
+
+# --------------------------------------------------------------#
+def winner():
+    deckStatsOfPlayer = checkDeckStats(PlayerCards)
+    deckStatsOfComputer = checkDeckStats(ComputerCards)
+    # testDeck = checkDeckStats(testCards)
+    print("Comp: Hand Value: {}".format(deckStatsOfComputer['HandValue']))
+    print("Play: Hand Value: {}".format(deckStatsOfPlayer['HandValue']))
+    print(" ______ ______ ______ ______ ______ ______ ______")
+    # print(testDeck['HandValue'])
+
+    if deckStatsOfPlayer['HandValue'] > deckStatsOfComputer['HandValue']:
+        message(1)
+
+    elif deckStatsOfPlayer['HandValue'] < deckStatsOfComputer['HandValue']:
+        message(2)
+
     else:
-        if deckStatsOfPlayer['HighCard'] > deckStatsOfComputer['HighCard']:
-            print("__     __                   __          __  _           _   ")
-            print("\ \   / /                   \ \        / / (_)         | |  ")
-            print(" \ \_/ /    ___    _   _     \ \  /\  / /   _   _ __   | |  ")
-            print("  \   /    / _ \  | | | |     \ \/  \/ /   | | | '_ \  | |  ")
-            print("   | |    | (_) | | |_| |      \  /\  /    | | | | | | |_|  ")
-            print("   |_|     \___/   \__,_|       \/  \/     |_| |_| |_| (_)  ")
-        elif deckStatsOfPlayer['HighCard'] < deckStatsOfComputer['HighCard']:
-            print(" __     __                    _                             _  ")
-            print(" \ \   / /                   | |                           | | ")
-            print("  \ \_/ /    ___    _   _    | |        ___    ___    ___  | | ")
-            print("   \   /    / _ \  | | | |   | |       / _ \  / __|  / _ \ | | ")
-            print("    | |    | (_) | | |_| |   | |____  | (_) | \__ \ |  __/ |_| ")
-            print("    |_|     \___/   \__,_|   |______|  \___/  |___/  \___| (_) ")
+        # --------------------------------------------------------------#
+        if deckStatsOfPlayer['HandValue'] == 9:  # Straight Flush Compare
+            if deckStatsOfPlayer['HighestCardInStraight'] > deckStatsOfComputer['HighestCardInStraight']:  # Straight
+                message(1)
+            elif deckStatsOfPlayer['HighestCardInStraight'] < deckStatsOfComputer['HighestCardInStraight']:  # Straight
+                message(1)
+
+        # --------------------------------------------------------------#
+        elif deckStatsOfPlayer['HighFour'] > deckStatsOfComputer['HighFour']:  # Four of a kind -  Player
+            message(1)
+        elif deckStatsOfPlayer['HighFour'] < deckStatsOfComputer['HighFour']:  # Four of a kind - Computer
+            message(2)
+
+        # --------------------------------------------------------------#
+        elif deckStatsOfPlayer['HandValue'] == 6:  # Flush Compare
+            flushCardsCompare(deckStatsOfPlayer, deckStatsOfComputer)
+
+        # --------------------------------------------------------------#
+        elif deckStatsOfPlayer['HandValue'] == 5:  # Straight Compare
+            if deckStatsOfPlayer['HighestCardInStraight'] > deckStatsOfComputer['HighestCardInStraight']:  # Straight
+                message(1)
+            elif deckStatsOfPlayer['HighestCardInStraight'] < deckStatsOfComputer['HighestCardInStraight']:  # Straight
+                message(2)
+        # --------------------------------------------------------------#
+        elif deckStatsOfPlayer['HighThree'] > deckStatsOfComputer['HighThree']:  # Three of a kind - Player
+            message(1)
+        elif deckStatsOfPlayer['HighThree'] < deckStatsOfComputer['HighThree']:  # Three of a kind - Computer
+            message(2)
+
+        # --------------------------------------------------------------#
+        elif deckStatsOfPlayer['HighPair'] > deckStatsOfComputer['HighPair']:  # Three of a kind - Player
+            message(1)
+
+        elif deckStatsOfPlayer['HighThree'] < deckStatsOfComputer['HighThree']:  # Three of a kind - Computer
+            message(2)
+
+        # --------------------------------------------------------------#
+
         else:
-            print("  _______   _          _  ")
-            print(" |__   __| (_)        | | ")
-            print("    | |     _    ___  | | ")
-            print("    | |    | |  / _ \ | | ")
-            print("    | |    | | |  __/ |_| ")
-            print("    |_|    |_|  \___| (_) ")
+            initialCardsCompare(deckStatsOfPlayer, deckStatsOfComputer)
 
 
 # --------------------------------------------------------------#
@@ -157,7 +229,7 @@ def flushCheck(totalList):
     numberOfHearts = 0
     numberOfSpades = 0
     numberOfClubs = 0
-    isAFlush = False
+    isAFlush = 0
 
     while index < len(totalList):
         if totalList[index]['type'] == '♢':
@@ -171,13 +243,13 @@ def flushCheck(totalList):
         index += 1
 
     if numberOfDiamonds >= 5:
-        isAFlush = True
+        isAFlush = 1
     elif numberOfHearts >= 5:
-        isAFlush = True
+        isAFlush = 2
     elif numberOfSpades >= 5:
-        isAFlush = True
+        isAFlush = 3
     elif numberOfClubs >= 5:
-        isAFlush = True
+        isAFlush = 4
 
     return isAFlush
 
@@ -187,6 +259,7 @@ def checkStraight(totalList):
     isAStraight = False
     pastCard = 0
     counter = 1
+    highestCard = 0
 
     for index in totalList:
 
@@ -201,7 +274,9 @@ def checkStraight(totalList):
                     isAStraight = True
                     return isAStraight
             else:
-                counter = 0
+                if counter >= 5:
+                    highestCard = pastCard['value']
+                counter = 1
                 pastCard = index
 
         else:
@@ -210,7 +285,7 @@ def checkStraight(totalList):
     if counter >= 5:
         isAStraight = True
 
-    return isAStraight
+    return isAStraight, highestCard
 
 
 # --------------------------------------------------------------#
@@ -262,7 +337,6 @@ def checkThreeOfAKind(listOfAllCardsInDeckSimplified):
 def checkPair(listOfAllCardsInDeckSimplified):
     containsPair = False
 
-
     for index in listOfAllCardsInDeckSimplified:
         if index['numberOfSameCardInDeck'] == 2:
             containsPair = True
@@ -299,16 +373,61 @@ def checkHighCard(listOfAllCardsInDeckSimplified):
 
 
 # ---------------------------------------------------------------#
+def checkHighPair(listOfAllCardsInDeckSimplified):
+    highPairValue = 0
 
-def checkDeckValue(listOfAllCardsInDeckSimplified, totalList):
+    for index in listOfAllCardsInDeckSimplified:
+        currentCardValue = index['value']
 
+        if index['numberOfSameCardInDeck'] == 2:
+            if highPairValue < currentCardValue:
+                highPairValue = currentCardValue
+
+    return highPairValue
+
+
+# ---------------------------------------------------------------#
+def checkHighThree(listOfAllCardsInDeckSimplified):
+    highThreeValue = 0
+
+    for index in listOfAllCardsInDeckSimplified:
+        currentCardValue = index['value']
+
+        if index['numberOfSameCardInDeck'] == 3:
+            if highThreeValue < currentCardValue:
+                highThreeValue = currentCardValue
+
+    return highThreeValue
+
+
+# ---------------------------------------------------------------#
+def checkHighFour(listOfAllCardsInDeckSimplified):
+    highFourValue = 0
+
+    for index in listOfAllCardsInDeckSimplified:
+        currentCardValue = index['value']
+
+        if index['numberOfSameCardInDeck'] == 4:
+            if highFourValue < currentCardValue:
+                highFourValue = currentCardValue
+
+    return highFourValue
+
+
+# ---------------------------------------------------------------#
+
+def checkDeckValue(listOfAllCardsInDeckSimplified, totalList, initialTwoCards):
     isAFlush = flushCheck(totalList)  # Check if it's a Flush
-    isAStraight = checkStraight(listOfAllCardsInDeckSimplified)  # Check if it's a Straight
+    flushType = 0
+    isAStraight, highestCardInStraight = checkStraight(listOfAllCardsInDeckSimplified)  # Check if it's a Straight
 
-    #for index in listOfAllCardsInDeckSimplified:
-        #print(index)
 
-    
+    if isAFlush > 0:
+        flushType = isAFlush
+        isAFlush = True
+
+    # for index in listOfAllCardsInDeckSimplified:
+    # print(index)
 
     isAceInDeck = checkIfSpecificCardInDeck(listOfAllCardsInDeckSimplified, 14)  # Check if Ace in deck
     isKingInDeck = checkIfSpecificCardInDeck(listOfAllCardsInDeckSimplified, 13)  # Check if King in deck
@@ -319,8 +438,11 @@ def checkDeckValue(listOfAllCardsInDeckSimplified, totalList):
     isThreeOfAKind = checkThreeOfAKind(listOfAllCardsInDeckSimplified)  # Check Three of a kind
     isTwoPair = checkTwoPair(listOfAllCardsInDeckSimplified)  # Check if Two Pair
     isPair = checkPair(listOfAllCardsInDeckSimplified)  # Check Pair
-    highCard = checkHighCard(listOfAllCardsInDeckSimplified)  # Check High Card
 
+    highCard = checkHighCard(initialTwoCards)  # Grab High Card
+    highPair = checkHighPair(listOfAllCardsInDeckSimplified)  # Grab Higher Pair number
+    highThree = checkHighThree(listOfAllCardsInDeckSimplified)  # Grab Higher Three of a Kind number
+    highFour = checkHighFour(listOfAllCardsInDeckSimplified)  # Grab Higher Four of a kind number
 
     if isAStraight and isAFlush and isAceInDeck and isKingInDeck and isQueenInDeck and isJackInDeck and is10InDeck:
         deckValue = 10  # Royal Flush - Checked
@@ -352,18 +474,24 @@ def checkDeckValue(listOfAllCardsInDeckSimplified, totalList):
     else:
         deckValue = 1  # HighCard - Needs to be extended
 
-    deckStats = {'HandValue': deckValue, 'Flush': isAFlush, 'Straight': isAStraight, 'HighCard': highCard}
+    deckStats = {'HandValue': deckValue, 'Flush': isAFlush, 'FlushType': flushType, 'Straight': isAStraight,
+                 'HighCard': highCard, 'HighPair': highPair, 'HighThree': highThree, 'HighFour': highFour,
+                 'HighestCardInStraight': highestCardInStraight}
     return deckStats
 
 
 # ---------------------------------------------------------------#
 def checkDeckStats(deck):
+    # First Two Cards
+    initialTwoCards = deck.copy()
+    sorted_TwoCards = sorted(initialTwoCards, key=lambda x: x['value'])
+
+    # Whole Deck
     sorted_deck = sorted(deck, key=lambda x: x['value'])
     totalList = tableCards.copy()
     sorted_TotalList = totalList
     sorted_TotalList.extend(sorted_deck)
     sorted_TotalList = sorted(totalList, key=lambda x: x['value'])
-
 
     listOfAllCardsInDeckSimplified = []
 
@@ -392,10 +520,15 @@ def checkDeckStats(deck):
         for index in indexPointerList:
             sorted_TotalListSimplified.remove(index)
 
-    deckStats = checkDeckValue(sorted_TotalListSimplified, sorted_TotalList)
+    deckStats = checkDeckValue(sorted_TotalListSimplified, sorted_TotalList, sorted_TwoCards)
 
     deckStatsData = {'HandValue': deckStats['HandValue'], 'Flush': deckStats['Flush'],
-                     'Straight': deckStats['Straight'], 'HighCard': deckStats['HighCard']}  # Reset
+                     'Straight': deckStats['Straight'], 'HighCard': deckStats['HighCard'],
+                     'HighPair': deckStats['HighPair'], 'HighThree': deckStats['HighThree'],
+                     'HighFour': deckStats['HighFour'], 'LowCard': sorted_TwoCards[0]['value'],
+                     'HighCardType': sorted_TwoCards[1]['type'], 'LowCardType': sorted_TwoCards[0]['type'],
+                     'FlushType': deckStats['FlushType'], 'HighestCardInStraight': deckStats['HighestCardInStraight']}  # Reset
+
     return deckStatsData
 
 
@@ -504,8 +637,8 @@ def roundCounter(rounds):
         print("| | \ \  | (_) | | |_| | | | | | | (_| |    | |")
         print("|_|  \_\  \___/   \__,_| |_| |_|  \__,_|    |_|")
 
-        print( " ______ ______ ______ ______ ______ ______ ______")
-        print( "|______|______|______|______|______|______|______|")
+        print(" ______ ______ ______ ______ ______ ______ ______")
+        print("|______|______|______|______|______|______|______|")
 
     elif rounds == 2:
         print("  _____                                _     ___  ")
@@ -514,8 +647,8 @@ def roundCounter(rounds):
         print("|  _  /   / _ \  | | | | | '_ \   / _` |     / / ")
         print("| | \ \  | (_) | | |_| | | | | | | (_| |    / /_ ")
         print("|_|  \_\  \___/   \__,_| |_| |_|  \__,_|   |____|")
-        print( " ______ ______ ______ ______ ______ ______ ______")
-        print( "|______|______|______|______|______|______|______|")
+        print(" ______ ______ ______ ______ ______ ______ ______")
+        print("|______|______|______|______|______|______|______|")
 
     elif rounds == 3:
         print("  _____                                _     ____ ")
@@ -524,8 +657,8 @@ def roundCounter(rounds):
         print("|  _  /   / _ \  | | | | | '_ \   / _` |    |__ < ")
         print("| | \ \  | (_) | | |_| | | | | | | (_| |    ___) |")
         print("|_|  \_\  \___/   \__,_| |_| |_|  \__,_|   |____/ ")
-        print( " ______ ______ ______ ______ ______ ______ ______")
-        print( "|______|______|______|______|______|______|______|")
+        print(" ______ ______ ______ ______ ______ ______ ______")
+        print("|______|______|______|______|______|______|______|")
 
 
 # ----------------------------------------------------------------#
@@ -543,19 +676,19 @@ def game():
     input('Ready? ')
     space()
     roundCounter(1)
-    time.sleep(3)  # Sleep for 3 seconds
+    time.sleep(1)  # Wait
 
     showAll()
     space()
 
     roundCounter(2)
-    time.sleep(3)  # Sleep for 3 seconds
+    time.sleep(1)  # Wait
     newCard(tableCards)
     showAllAfter()
     space()
 
     roundCounter(3)
-    time.sleep(3)  # Sleep for 3 seconds
+    time.sleep(1)  # Wait
 
     newCard(tableCards)
     showAllAfter()
