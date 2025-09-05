@@ -185,7 +185,7 @@ def winner():
             if deckStatsOfPlayer['HighestCardInStraight'] > deckStatsOfComputer['HighestCardInStraight']:  # Straight
                 message(1)
             elif deckStatsOfPlayer['HighestCardInStraight'] < deckStatsOfComputer['HighestCardInStraight']:  # Straight
-                message(1)
+                message(2)
 
         # --------------------------------------------------------------#
         elif deckStatsOfPlayer['HighFour'] > deckStatsOfComputer['HighFour']:  # Four of a kind -  Player
@@ -212,12 +212,10 @@ def winner():
         # --------------------------------------------------------------#
         elif deckStatsOfPlayer['HighPair'] > deckStatsOfComputer['HighPair']:  # Three of a kind - Player
             message(1)
-
         elif deckStatsOfPlayer['HighThree'] < deckStatsOfComputer['HighThree']:  # Three of a kind - Computer
             message(2)
 
         # --------------------------------------------------------------#
-
         else:
             initialCardsCompare(deckStatsOfPlayer, deckStatsOfComputer)
 
