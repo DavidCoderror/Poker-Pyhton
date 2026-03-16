@@ -1,696 +1,646 @@
+# -------------------------------------------------------------# -------------------------------------------------------------
+# Imports
 import random
-import time
-
-# Cards
-cardPile = []
-tableCards = []
-ComputerCards = []
-PlayerCards = []
-rounds = 1
+from collections import Counter
 
 
-# - Test Zone
-# testCards = []
-# c10_1 = {"value": 10, "type": "♢", "name": "10", "img": "🂪"}
-# c11_1 = {"value": 11, "type": "♢", "name": "J", "img": "🂫"}
-# c12_1 = {"value": 12, "type": "♢", "name": "Q", "img": "🂬"}
-# c13_1 = {"value": 13, "type": "♢", "name": "K", "img": "🂮"}
-# c14_1 = {"value": 14, "type": "♢", "name": "A", "img": "🂾"}
-# testCards.append(c10_1)
-# testCards.append(c11_1)
-# testCards.append(c12_1)
-# testCards.append(c13_1)
-# testCards.append(c14_1)
+# -------------------------------------------------------------# -------------------------------------------------------------
 
 
-# --------------------------------------------------------------#
-def startingHandComputer():
-    ComputerCards.clear()
-    newCard(ComputerCards), newCard(ComputerCards)
+# -------------------------------------------------------------# -------------------------------------------------------------
+# Card Class
+# -------------------------------------------------------------# -------------------------------------------------------------
+
+class Card:
+    def __init__(self, value, suit, img):  # Initialization (What does a card holds)
+        self.value = value
+        self.suit = suit
+        self.img = img
+
+    def __str__(self):  # To print the object when called ----> print(Card)
+        return f"{self.value}{self.suit}{self.img}"  # To Show the card
 
 
-# --------------------------------------------------------------#
-def startingHandPlayer():
-    PlayerCards.clear()
-    newCard(PlayerCards), newCard(PlayerCards)
+# -------------------------------------------------------------# -------------------------------------------------------------
+# Deck Class
+# -------------------------------------------------------------# -------------------------------------------------------------
+class Deck:
+    def __init__(self):  # A Deck holds Cards
+        self.cardDeck = []
+        self.createDeck()  # Call function when initialized
+
+    def createDeck(self):  # Creating the Main Deck
+        cardValues = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]  # There are 14 Values
+        cardSuit = ["♢", "♡", "♠", "♣"]  # There Are Four Suits
+        cardImage = ["🃂", "🃃", "🃄", "🃅", "🂦", '🂧', "🂨", '🂩', "🂪", "🂫", "🂬", "🂮", "🂾"]  # There are 14 Images
+
+        for suit in cardSuit:
+            for value in cardValues:
+                self.cardDeck.append(Card(value, suit, cardImage[value - 2]))
+
+        random.shuffle(self.cardDeck)
+
+    def customDeck(self, customDeck):
+        self.cardDeck = []
+        for value, suit, img in customDeck:
+            self.cardDeck.append(Card(value, suit, img))
 
 
-# --------------------------------------------------------------#
-def setupTableCards():
-    tableCards.clear()
-    newCard(tableCards), newCard(tableCards), newCard(tableCards)
+# -------------------------------------------------------------# -------------------------------------------------------------
+# Player Class
+# -------------------------------------------------------------# -------------------------------------------------------------
+
+class Player:
+    def __init__(self, name):  # A player holds a deck
+        self.playerName = name
+        self.playerDeck = []
+        self.playerDeckValue = 0
+        self.playerDeckStatsData = {
+            'HighCard': 0, 'HighPair': 0, 'HighThree': 0, 'HighFour': 0,  # Highs
+            'LowCard': 0, 'LowPair': 0, 'LowThree': 0,  # lows
+            'FlushType': "N/A", 'HighestCardInStraight': 0, 'FlushValues': [],
+            'FiveHighestCards': []
+        }
+
+    def receiveCard(self, MainDeck):  # Grab a card from MAIN deck and add to PLAYER deck
+        newCard = MainDeck.cardDeck.pop()
+        self.playerDeck.append(newCard)  # We get a new card
+        self.playerDeck.sort(key=lambda card: card.value)  # We sort the new Card
+
+    def grabFiveHighestCards(self, deck):
+        reversedDeck = sorted(deck, key=lambda card: card.value, reverse=True)  # Reverse the deck
+        theFiveHighestCards = reversedDeck[:5]  # Grab First 5 cards
+        self.playerDeckStatsData['FiveHighestCards'] = [card.value for card in theFiveHighestCards] # Store Data
+
+    def resetData(self):
+        self.playerDeckStatsData = {
+            'HighCard': 0, 'HighPair': 0, 'HighThree': 0, 'HighFour': 0,
+            'LowCard': 0, 'LowPair': 0, 'LowThree': 0,
+            'FlushType': "N/A", 'HighestCardInStraight': 0, 'FlushValues': [],
+            'FiveHighestCards': []
+        }
 
 
-# --------------------------------------------------------------#
-def newCard(deck):  # Grab a new card - Remove - Give from the pile
+# -------------------------------------------------------------# -------------------------------------------------------------
+# Table Class
+# -------------------------------------------------------------# -------------------------------------------------------------
+class Table:
+    def __init__(self):
+        self.tableDeck = []
 
-    index = random.randint(0, len(cardPile))
-    if index == len(cardPile):
-        index = index - 1
+    def setupTable(self, MainDeck):  # Create 3 cards in deck
 
-    card = cardPile[index]
-    cardPile.remove(cardPile[index])
-    deck.append(card)
+        try:
+            while len(self.tableDeck) < 3:  # Create the 3 Starting Cards
+                self.receiveCard(MainDeck)
+        except:
+            print("Table Setup has encountered an issue")
 
-
-# --------------------------------------------------------------#
-def showCards(deck):
-    index = 0
-    counter = 1
-    while index < len(deck):
-        print("{}:{}{}{}".format(counter, deck[index]['name'], deck[index]['type'], deck[index]['img']))
-        index = index + 1
-        counter = counter + 1
+    def receiveCard(self, MainDeck):  # Grab a card from MAIN deck and add to Table deck
+        newCard = MainDeck.cardDeck.pop()
+        self.tableDeck.append(newCard)
 
 
-# --------------------------------------------------------------#
-def showAll():
-    print("Table")
-    showCards(tableCards)
-    print(" ______ ______ ______ ______ ______ ______ ______")
-    time.sleep(1.5)  # Wait
-    print("Computer")
-    showCards(ComputerCards)
-    print(" ______ ______ ______ ______ ______ ______ ______")
-    time.sleep(1.5)  # Wait
-    print("Player")
-    showCards(PlayerCards)
-    print(" ______ ______ ______ ______ ______ ______ ______")
-    time.sleep(3)  # Wait
+# -------------------------------------------------------------# -------------------------------------------------------------
+# Game Class
+# -------------------------------------------------------------# -------------------------------------------------------------
+class Game:  # The actual Game and Rounds
+    def __init__(self, playerNames):
+        self.deck = Deck()
+        self.table = Table()
+        self.players = []
+        self.round = 0
+        self.currentTurn = 0
+        self.playerFolded = False
+
+        for player in playerNames:  # Add players to the list
+            self.players.append(player)
+
+    def startGame(self):  # Reset and Setups
+
+        self.deck = Deck()
+        self.round = 0
+        self.playerFolded = False
+        self.table.tableDeck = []
+
+        for player in self.players:
+            player.playerDeck = []
+            player.receiveCard(self.deck)
+            player.receiveCard(self.deck)
+            player.resetData()
+            player.playerDeckValue = 0
+
+        self.table.setupTable(self.deck)
+
+    def hit(self):
+        if self.round >= 2:
+            return {"status": "showdown", "state": self.getFinalState()}
+
+        self.table.receiveCard(self.deck)
+        self.round += 1
+
+        if self.round == 2:
+            return {"status": "showdown", "state": self.getFinalState()}
+
+        return {"status": "continue", "state": self.getStateForPlayer(1)}  # Assuming player 1 is human
+
+    def fold(self, playerIndex):
+        self.playerFolded = True
+        return {
+            "status": "player_folded",
+            "foldedPlayer": self.players[playerIndex].playerName,
+            "state": self.getStateForPlayer(1)
+        }
+
+    def cardToDict(self, card):
+        return {
+            "value": card.value,
+            "suit": card.suit,
+            "img": card.img
+        }
+
+    def getStateForPlayer(self, playerIndex):  # Grab the State
+
+        player = self.players[playerIndex]
+
+        return {
+            "round": self.round,
+            "table": [self.cardToDict(card) for card in self.table.tableDeck],
+            "your_cards": [self.cardToDict(card) for card in player.playerDeck],
+            "opponent_cards": ["🂠", "🂠"]  # hidden cards
+        }
+
+    def getFinalState(self):  # When Cards Revealed at the end
+        player1 = self.players[0]
+        player2 = self.players[1]
+
+        return {
+            "round": self.round,
+            "table": [self.cardToDict(card) for card in self.table.tableDeck],
+            "player1_cards": [self.cardToDict(card) for card in player1.playerDeck],
+            "player2_cards": [self.cardToDict(card) for card in player2.playerDeck],
+        }
 
 
-# --------------------------------------------------------------#
-def showAllAfter():
-    print("Table")
-    showCards(tableCards)
-    print(" ______ ______ ______ ______ ______ ______ ______")
-    print("Computer")
-    showCards(ComputerCards)
-    print(" ______ ______ ______ ______ ______ ______ ______")
-    print("Player")
-    showCards(PlayerCards)
-    print(" ______ ______ ______ ______ ______ ______ ______")
-    time.sleep(1.5)  # Wait
+    # -------------------------------------------------------------# # -------------------------------------------------------------#
+    # -------------------------------------------------------------------- We check the winner!# ------------------------------------------------------------- #
+    # -------------------------------------------------------------# # -------------------------------------------------------------#
 
+    def checkWinner(self):
+        self.checkDeckValues()  # Check Decks
+        player1 = self.players[0]
+        player2 = self.players[1]
 
-# ---------------------------------------------------------------#
-def space():
-    index = 0
-    while index <= 15:
-        print(" ")
-        index += 1
+        p1_cards = player1.playerDeckStatsData['FiveHighestCards']
+        p2_cards = player2.playerDeckStatsData['FiveHighestCards']
+        result = {"winner": "?", "reason": "Hand Not Checked"}
 
+        # Player 1 Wins
+        if player1.playerDeckValue < player2.playerDeckValue:
+            result = {"winner": player1.playerName, "reason": "Higher Hand Value"}
+            pass
 
-# --------------------------------------------------------------#
-def initialCardsCompare(deckStatsOfPlayer, deckStatsOfComputer):
-    if deckStatsOfPlayer['HighCard'] > deckStatsOfComputer['HighCard']:  # Pair - Player
-        message(1)
+        # Player 2 Wins
+        elif player1.playerDeckValue > player2.playerDeckValue:
+            result = {"winner": player2.playerName, "reason": "Higher Hand Value"}
+            pass
 
-    elif deckStatsOfPlayer['HighCard'] < deckStatsOfComputer['HighCard']:  # Pair - Computer
-        message(2)
-
-    elif deckStatsOfPlayer['LowCard'] > deckStatsOfComputer[
-        'LowCard']:  # Low Card ( The Lower Card if High Card is Equal )
-        message(1)
-
-    elif deckStatsOfPlayer['LowCard'] < deckStatsOfComputer['LowCard']:  # Low Card
-        message(2)
-
-    else:
-        print("  _______   _          _  ")
-        print(" |__   __| (_)        | | ")
-        print("    | |     _    ___  | | ")
-        print("    | |    | |  / _ \ | | ")
-        print("    | |    | | |  __/ |_| ")
-        print("    |_|    |_|  \___| (_) ")
-
-
-# --------------------------------------------------------------#
-def message(x):
-    if x == 1:
-        print("__     __                   __          __  _           _   ")
-        print("\ \   / /                   \ \        / / (_)         | |  ")
-        print(" \ \_/ /    ___    _   _     \ \  /\  / /   _   _ __   | |  ")
-        print("  \   /    / _ \  | | | |     \ \/  \/ /   | | | '_ \  | |  ")
-        print("   | |    | (_) | | |_| |      \  /\  /    | | | | | | |_|  ")
-        print("   |_|     \___/   \__,_|       \/  \/     |_| |_| |_| (_)  ")
-
-    elif x == 2:
-        print(" __     __                    _                             _  ")
-        print(" \ \   / /                   | |                           | | ")
-        print("  \ \_/ /    ___    _   _    | |        ___    ___    ___  | | ")
-        print("   \   /    / _ \  | | | |   | |       / _ \  / __|  / _ \ | | ")
-        print("    | |    | (_) | | |_| |   | |____  | (_) | \__ \ |  __/ |_| ")
-        print("    |_|     \___/   \__,_|   |______|  \___/  |___/  \___| (_) ")
-
-
-# --------------------------------------------------------------#
-def flushCardsCompare(deckStatsOfPlayer, deckStatsOfComputer):
-    if deckStatsOfPlayer['HighCardType'] == deckStatsOfPlayer['FlushType'] and deckStatsOfComputer['HighCardType'] == \
-            deckStatsOfPlayer['FlushType']:
-        initialCardsCompare(deckStatsOfPlayer, deckStatsOfComputer)
-
-    elif deckStatsOfPlayer['HighCardType'] == deckStatsOfPlayer['FlushType'] and deckStatsOfComputer['LowCardType'] == \
-            deckStatsOfPlayer['FlushType']:
-        initialCardsCompare(deckStatsOfPlayer, deckStatsOfComputer)
-
-    elif deckStatsOfPlayer['LowCardType'] == deckStatsOfPlayer['FlushType'] and deckStatsOfComputer['HighCardType'] == \
-            deckStatsOfPlayer['FlushType']:
-        initialCardsCompare(deckStatsOfPlayer, deckStatsOfComputer)
-
-    elif deckStatsOfPlayer['LowCardType'] == deckStatsOfPlayer['FlushType'] and deckStatsOfComputer['LowCardType'] == \
-            deckStatsOfPlayer['FlushType']:
-        initialCardsCompare(deckStatsOfPlayer, deckStatsOfComputer)
-
-
-# --------------------------------------------------------------#
-def winner():
-    deckStatsOfPlayer = checkDeckStats(PlayerCards)
-    deckStatsOfComputer = checkDeckStats(ComputerCards)
-    # testDeck = checkDeckStats(testCards)
-    print("Comp: Hand Value: {}".format(deckStatsOfComputer['HandValue']))
-    print("Play: Hand Value: {}".format(deckStatsOfPlayer['HandValue']))
-    print(" ______ ______ ______ ______ ______ ______ ______")
-    # print(testDeck['HandValue'])
-
-    if deckStatsOfPlayer['HandValue'] > deckStatsOfComputer['HandValue']:
-        message(1)
-
-    elif deckStatsOfPlayer['HandValue'] < deckStatsOfComputer['HandValue']:
-        message(2)
-
-    else:
-        # --------------------------------------------------------------#
-        if deckStatsOfPlayer['HandValue'] == 9:  # Straight Flush Compare
-            if deckStatsOfPlayer['HighestCardInStraight'] > deckStatsOfComputer['HighestCardInStraight']:  # Straight
-                message(1)
-            elif deckStatsOfPlayer['HighestCardInStraight'] < deckStatsOfComputer['HighestCardInStraight']:  # Straight
-                message(2)
-
-        # --------------------------------------------------------------#
-        elif deckStatsOfPlayer['HighFour'] > deckStatsOfComputer['HighFour']:  # Four of a kind -  Player
-            message(1)
-        elif deckStatsOfPlayer['HighFour'] < deckStatsOfComputer['HighFour']:  # Four of a kind - Computer
-            message(2)
-
-        # --------------------------------------------------------------#
-        elif deckStatsOfPlayer['HandValue'] == 6:  # Flush Compare
-            flushCardsCompare(deckStatsOfPlayer, deckStatsOfComputer)
-
-        # --------------------------------------------------------------#
-        elif deckStatsOfPlayer['HandValue'] == 5:  # Straight Compare
-            if deckStatsOfPlayer['HighestCardInStraight'] > deckStatsOfComputer['HighestCardInStraight']:  # Straight
-                message(1)
-            elif deckStatsOfPlayer['HighestCardInStraight'] < deckStatsOfComputer['HighestCardInStraight']:  # Straight
-                message(2)
-        # --------------------------------------------------------------#
-        elif deckStatsOfPlayer['HighThree'] > deckStatsOfComputer['HighThree']:  # Three of a kind - Player
-            message(1)
-        elif deckStatsOfPlayer['HighThree'] < deckStatsOfComputer['HighThree']:  # Three of a kind - Computer
-            message(2)
-
-        # --------------------------------------------------------------#
-        elif deckStatsOfPlayer['HighPair'] > deckStatsOfComputer['HighPair']:  # Three of a kind - Player
-            message(1)
-        elif deckStatsOfPlayer['HighThree'] < deckStatsOfComputer['HighThree']:  # Three of a kind - Computer
-            message(2)
-
-        # --------------------------------------------------------------#
+        # IF hand is the same
         else:
-            initialCardsCompare(deckStatsOfPlayer, deckStatsOfComputer)
+            # 1. Straight Flush or Straight
+            if player1.playerDeckValue == 2 or player1.playerDeckValue == 6:
+                if player1.playerDeckStatsData['HighestCardInStraight'] > player2.playerDeckStatsData['HighestCardInStraight']:
+                    result = {"winner": player1.playerName, "reason": "Better Straight"}
+                    pass
+                elif player1.playerDeckStatsData['HighestCardInStraight'] < player2.playerDeckStatsData[
+                    'HighestCardInStraight']:
+                    result = {"winner": player2.playerName, "reason": "Better Straight"}
+                    pass
+
+            # 2. Four of a kind
+            elif player1.playerDeckValue == 3:
+                if player1.playerDeckStatsData['HighFour'] > player2.playerDeckStatsData['HighFour']:
+                    result = {"winner": player1.playerName, "reason": "Better Four of a Kind"}
+                    pass
+                elif player1.playerDeckStatsData['HighFour'] < player2.playerDeckStatsData['HighFour']:
+                    result = {"winner": player2.playerName, "reason": "Better Four of a Kind"}
+                    pass
+                else:
+                    kicker_winner = self.compareKickers(player1, player2, [player1.playerDeckStatsData['HighFour']] * 4)
+                    if kicker_winner == "Tie":
+                        result = {"winner": "Tie!", "reason": "Same Quads + Kicker"}
+                    else:
+                        result = {"winner": kicker_winner, "reason": "Same Quads, better kicker"}
+
+            # 3. Full House
+            elif player1.playerDeckValue == 4:
+                if player1.playerDeckStatsData['HighThree'] > player2.playerDeckStatsData['HighThree']:
+                    result = {"winner": player1.playerName, "reason": "Better Three of a Kind in the full house"}
+                    pass
+                elif player1.playerDeckStatsData['HighThree'] < player2.playerDeckStatsData['HighThree']:
+                    result = {"winner": player2.playerName, "reason": "Better Three of a Kind in the full house"}
+                    pass
+                else:
+                    if player1.playerDeckStatsData['HighPair'] > player2.playerDeckStatsData['HighPair']:
+                        result = {"winner": player1.playerName, "reason": "Better Pair in the full house"}
+                        pass
+                    elif player1.playerDeckStatsData['HighPair'] < player2.playerDeckStatsData['HighPair']:
+                        result = {"winner": player2.playerName, "reason": "Better Pair in the full house"}
+                        pass
+
+            # 4. Flush
+            elif player1.playerDeckValue == 5:
+                if player1.playerDeckStatsData['FlushValues'] > player2.playerDeckStatsData['FlushValues']:
+                    result = {"winner": player1.playerName, "reason": "Better Flush Hand"}
+                    pass
+                elif player1.playerDeckStatsData['FlushValues'] < player2.playerDeckStatsData['FlushValues']:
+                    result = {"winner": player2.playerName, "reason": "Better Flush Hand"}
+                    pass
+
+            # 5. Three of a kind
+            elif player1.playerDeckValue == 7:
+                if player1.playerDeckStatsData['HighThree'] > player2.playerDeckStatsData['HighThree']:
+                    result = {"winner": player1.playerName, "reason": "Same Three of a Kind, better kicker"}
+                    pass
+                elif player1.playerDeckStatsData['HighThree'] < player2.playerDeckStatsData['HighThree']:
+                    result = {"winner": player2.playerName, "reason": "Same Three of a Kind, better kicker"}
+                    pass
+                else:
+                    kicker_winner = self.compareKickers(player1, player2, [player1.playerDeckStatsData['HighThree']] * 3)
+                    if kicker_winner == "Tie":
+                        result = {"winner": "Tie!", "reason": "Same Three of a Kind, better kicker"}
+                    else:
+                        result = {"winner": kicker_winner, "reason": "Same Three of a Kind, better kicker"}
+
+            # 6. Two Pair
+            elif player1.playerDeckValue == 8:
+                if player1.playerDeckStatsData['HighPair'] > player2.playerDeckStatsData['HighPair']:
+                    result = {"winner": player1.playerName, "reason": "Better Two Pair"}
+                    pass
+                elif player1.playerDeckStatsData['HighPair'] < player2.playerDeckStatsData['HighPair']:
+                    result = {"winner": player2.playerName, "reason": "Better Two Pair"}
+                    pass
+                else:
+                    if player1.playerDeckStatsData['LowPair'] > player2.playerDeckStatsData['LowPair']:
+                        result = {"winner": player1.playerName, "reason": "Better Two Pair"}
+                        pass
+                    elif player1.playerDeckStatsData['LowPair'] < player2.playerDeckStatsData['LowPair']:
+                        result = {"winner": player2.playerName, "reason": "Better Two Pair"}
+                        pass
+                    else:
+                        kicker_winner = self.compareKickers(player1, player2, [player1.playerDeckStatsData['HighPair']] * 2 + [player1.playerDeckStatsData['LowPair']] * 2)
+                        if kicker_winner == "Tie":
+                            result = {"winner": "Tie!", "reason": "Same Two Pair, better kicker"}
+                        else:
+                            result = {"winner": kicker_winner, "reason": "Same Two Pair, better kicker"}
+
+            # 7. Pair
+            elif player1.playerDeckValue == 9:
+                if player1.playerDeckStatsData['HighPair'] > player2.playerDeckStatsData['HighPair']:
+                    result = {"winner": player1.playerName, "reason": "Better Pair"}
+                    pass
+                elif player1.playerDeckStatsData['HighPair'] < player2.playerDeckStatsData['HighPair']:
+                    result = {"winner": player2.playerName, "reason": "Better Pair"}
+                    pass
+                else:
+                    kicker_winner = self.compareKickers( player1,player2,[player1.playerDeckStatsData['HighPair']] * 2)
+                    if kicker_winner == "Tie":
+                        result = {"winner": "Tie!", "reason": "Same Pairs, better kicker"}
+                    else:
+                        result = {"winner": kicker_winner, "reason": "Same Pairs, better kicker"}
+
+            # 8. HighCard
+            elif player1.playerDeckValue == 10:
+
+                kicker_winner = self.compareKickers(player1, player2, [])
+                if kicker_winner == "Tie":
+                    result = {"winner": "Tie!", "reason": "Same High Cards"}
+                else:
+                    result = {"winner": kicker_winner, "reason": "Same High Cards"}
 
 
-# --------------------------------------------------------------#
-def flushCheck(totalList):
-    index = 0
-    numberOfDiamonds = 0
-    numberOfHearts = 0
-    numberOfSpades = 0
-    numberOfClubs = 0
-    isAFlush = 0
 
-    while index < len(totalList):
-        if totalList[index]['type'] == '♢':
-            numberOfDiamonds += 1
-        elif totalList[index]['type'] == '♡':
-            numberOfHearts += 1
-        elif totalList[index]['type'] == '♠':
-            numberOfSpades += 1
-        elif totalList[index]['type'] == '♣':
-            numberOfClubs += 1
-        index += 1
+        return result
 
-    if numberOfDiamonds >= 5:
-        isAFlush = 1
-    elif numberOfHearts >= 5:
-        isAFlush = 2
-    elif numberOfSpades >= 5:
-        isAFlush = 3
-    elif numberOfClubs >= 5:
-        isAFlush = 4
+    def checkDeckValues(self):  # Checks Values of Deck of players (Scores from 1-10) 1 = Highest 10 = Lowest
 
-    return isAFlush
+        for player in self.players:
 
+            deck = player.playerDeck + self.table.tableDeck
+            deck.sort(key=lambda card: card.value)  # We sort the new Card
 
-# --------------------------------------------------------------#
-def checkStraight(totalList):
-    isAStraight = False
-    pastCard = 0
-    counter = 1
-    highestCard = 0
+            # Grab five highest cards
+            player.grabFiveHighestCards(deck)
 
-    for index in totalList:
+            # High Card and LowCard
+            sorted_values = sorted([card.value for card in deck])
+            player.playerDeckStatsData["LowCard"] = sorted_values[0]
+            player.playerDeckStatsData["HighCard"] = sorted_values[-1]
 
-        if pastCard != 0:
-            b = (pastCard['value'])
-            a = (index['value'] - 1)
+            if self.royalFlushCheck(deck, player):  # 1 Royal Flush - WORKS
+                player.playerDeckValue = 1
+                pass
 
-            if a == b:
-                counter += 1
-                pastCard = index
-                if counter >= 5:
-                    isAStraight = True
-                    return isAStraight
+            elif self.straightFlushCheck(deck, player):  # 2 Straight Flush - WORKS
+                player.playerDeckValue = 2
+                pass
+
+            elif self.countCards(deck, player, 4):  # 3 Four of a kind - WORKS
+                player.playerDeckValue = 3
+                pass
+
+            elif self.fullHouse(deck, player):  # 4 Full House - WORKS
+                player.playerDeckValue = 4
+                pass
+
+            elif self.flushCheck(deck, player):  # 5 Flush - WORKS
+                player.playerDeckValue = 5
+                pass
+
+            elif self.staightCheck(deck, player):  # 6 Straight - WORKS
+                player.playerDeckValue = 6
+                pass
+
+            elif self.countCards(deck, player, 3):  # 7 Three of a kind - WORKS
+                player.playerDeckValue = 7
+                pass
+
+            elif self.countDoublePair(deck, player):  # 8 Two Pairs - WORKS
+                player.playerDeckValue = 8
+                pass
+
+            elif self.countCards(deck, player, 2):  # 9 One Pair - WORKS
+                player.playerDeckValue = 9
+                pass
+
+            else:  # 10 High-card
+                player.playerDeckValue = 10
+
+    def countCards(self, deck, player, number):  # pairs, Three, four
+        values = [card.value for card in deck]
+        cardChecked = False
+
+        count = Counter(values)
+
+        for value in values:
+            if count[value] == number:
+
+                # Section to grab deck details
+                if number == 2:
+                    player.playerDeckStatsData["HighPair"] = value
+                    cardChecked = True
+
+                elif number == 3:
+                    player.playerDeckStatsData["HighThree"] = value
+                    cardChecked = True
+
+                elif number == 4:
+                    player.playerDeckStatsData["HighFour"] = value
+                    cardChecked = True
+
+        return cardChecked
+
+    def countDoublePair(self, deck, player):  # Double Pair
+        countOfPairs = 0
+        values = [card.value for card in deck]
+        cardsChecked = []
+
+        pairList = []
+
+        for value in values:
+            count = values.count(value)
+
+            if value not in cardsChecked:  # Check if card already in deck
+                if count == 2:
+                    pairList.append(value)
+                    countOfPairs += 1
+                cardsChecked.append(value)  # Add to list to get marked that we checked
+
+        # Section to grab deck details
+        pairListSize = len(pairList)
+
+        if pairListSize == 2:  # Just 2 pairs
+            player.playerDeckStatsData["LowPair"] = pairList[0]
+            player.playerDeckStatsData["HighPair"] = pairList[1]
+
+        elif pairListSize == 3:  # Contains 3 pairs
+            player.playerDeckStatsData["LowPair"] = pairList[1]
+            player.playerDeckStatsData["HighPair"] = pairList[2]
+
+        return countOfPairs >= 2
+
+    def flushCheck(self, deck, player):  # Check Flushes
+        suits = {}
+
+        # Group cards by suit
+        for card in deck:
+            suits.setdefault(card.suit, []).append(card.value)
+
+        for suit, values in suits.items():
+            if len(values) >= 5:  # We only look for the suit that has 5 or more items in them
+                values.sort(reverse=True)  # Highest to lowest now
+                player.playerDeckStatsData["FlushValues"] = values[:5]  # We put the 5 highest values in the list
+                player.playerDeckStatsData["FlushType"] = suit  # We mark the suit npw
+                return True
+
+        return False
+
+    def staightCheck(self, deck, player):  # Check if deck contains straight
+        values = [card.value for card in deck]
+        values = sorted(set(values))
+
+        straightCount = 1
+        previousValue = 0
+
+        straightList = []
+
+        countAces = values.count(14)
+        if countAces >= 1:
+            values.append(1)
+            values.sort()  # We sort the new Card
+
+        for value in values:
+            if previousValue == 0:
+                previousValue = value
             else:
-                if counter >= 5:
-                    highestCard = pastCard['value']
-                counter = 1
-                pastCard = index
-
-        else:
-            pastCard = index
-
-    if counter >= 5:
-        isAStraight = True
-
-    return isAStraight, highestCard
-
-
-# --------------------------------------------------------------#
-def checkAmountOfSameCard(totalList, card):
-    counter = 0
-
-    for index in totalList:
-        if index['value'] == card['value']:
-            counter += 1
-
-    Card = {"value": card['value'], "numberOfSameCardInDeck": counter}  # Used in Checking Decks
-    return Card
-
-
-# ---------------------------------------------------------------#
-def checkIfSpecificCardInDeck(totalList, cardValue):
-    containsCard = False
-
-    for index in totalList:
-        if index['value'] == cardValue:
-            containsCard = True
-
-    return containsCard
-
-
-# ---------------------------------------------------------------#
-def checkFourOfAKind(listOfAllCardsInDeckSimplified):
-    containsFourOfAKind = False
-
-    for index in listOfAllCardsInDeckSimplified:
-        if index['numberOfSameCardInDeck'] == 4:
-            containsFourOfAKind = True
-
-    return containsFourOfAKind
-
-
-# ---------------------------------------------------------------#
-def checkThreeOfAKind(listOfAllCardsInDeckSimplified):
-    containsThreeOfAKind = False
-
-    for index in listOfAllCardsInDeckSimplified:
-        if index['numberOfSameCardInDeck'] == 3:
-            containsThreeOfAKind = True
-
-    return containsThreeOfAKind
-
-
-# ---------------------------------------------------------------#
-def checkPair(listOfAllCardsInDeckSimplified):
-    containsPair = False
-
-    for index in listOfAllCardsInDeckSimplified:
-        if index['numberOfSameCardInDeck'] == 2:
-            containsPair = True
-
-    return containsPair
-
-
-# ---------------------------------------------------------------#
-def checkTwoPair(listOfAllCardsInDeckSimplified):
-    containsTwoPair = False
-    counter = 0
-
-    for index in listOfAllCardsInDeckSimplified:
-        if index['numberOfSameCardInDeck'] == 2:
-            counter += 1
-
-    if counter >= 2:
-        containsTwoPair = True
-
-    return containsTwoPair
-
-
-# ---------------------------------------------------------------#
-def checkHighCard(listOfAllCardsInDeckSimplified):
-    highCardValue = 0
-
-    for index in listOfAllCardsInDeckSimplified:
-        currentCardValue = index['value']
-
-        if highCardValue < currentCardValue:
-            highCardValue = currentCardValue
-
-    return highCardValue
-
-
-# ---------------------------------------------------------------#
-def checkHighPair(listOfAllCardsInDeckSimplified):
-    highPairValue = 0
-
-    for index in listOfAllCardsInDeckSimplified:
-        currentCardValue = index['value']
-
-        if index['numberOfSameCardInDeck'] == 2:
-            if highPairValue < currentCardValue:
-                highPairValue = currentCardValue
-
-    return highPairValue
-
-
-# ---------------------------------------------------------------#
-def checkHighThree(listOfAllCardsInDeckSimplified):
-    highThreeValue = 0
-
-    for index in listOfAllCardsInDeckSimplified:
-        currentCardValue = index['value']
-
-        if index['numberOfSameCardInDeck'] == 3:
-            if highThreeValue < currentCardValue:
-                highThreeValue = currentCardValue
-
-    return highThreeValue
-
-
-# ---------------------------------------------------------------#
-def checkHighFour(listOfAllCardsInDeckSimplified):
-    highFourValue = 0
-
-    for index in listOfAllCardsInDeckSimplified:
-        currentCardValue = index['value']
-
-        if index['numberOfSameCardInDeck'] == 4:
-            if highFourValue < currentCardValue:
-                highFourValue = currentCardValue
-
-    return highFourValue
-
-
-# ---------------------------------------------------------------#
-
-def checkDeckValue(listOfAllCardsInDeckSimplified, totalList, initialTwoCards):
-    isAFlush = flushCheck(totalList)  # Check if it's a Flush
-    flushType = 0
-    isAStraight, highestCardInStraight = checkStraight(listOfAllCardsInDeckSimplified)  # Check if it's a Straight
-
-
-    if isAFlush > 0:
-        flushType = isAFlush
-        isAFlush = True
-
-    # for index in listOfAllCardsInDeckSimplified:
-    # print(index)
-
-    isAceInDeck = checkIfSpecificCardInDeck(listOfAllCardsInDeckSimplified, 14)  # Check if Ace in deck
-    isKingInDeck = checkIfSpecificCardInDeck(listOfAllCardsInDeckSimplified, 13)  # Check if King in deck
-    isQueenInDeck = checkIfSpecificCardInDeck(listOfAllCardsInDeckSimplified, 12)  # Check if Queen in deck
-    isJackInDeck = checkIfSpecificCardInDeck(listOfAllCardsInDeckSimplified, 11)  # Check if Jack in deck
-    is10InDeck = checkIfSpecificCardInDeck(listOfAllCardsInDeckSimplified, 10)  # Check if 10 in deck
-    isFourOfAKind = checkFourOfAKind(listOfAllCardsInDeckSimplified)  # Check Four of a kind
-    isThreeOfAKind = checkThreeOfAKind(listOfAllCardsInDeckSimplified)  # Check Three of a kind
-    isTwoPair = checkTwoPair(listOfAllCardsInDeckSimplified)  # Check if Two Pair
-    isPair = checkPair(listOfAllCardsInDeckSimplified)  # Check Pair
-
-    highCard = checkHighCard(initialTwoCards)  # Grab High Card
-    highPair = checkHighPair(listOfAllCardsInDeckSimplified)  # Grab Higher Pair number
-    highThree = checkHighThree(listOfAllCardsInDeckSimplified)  # Grab Higher Three of a Kind number
-    highFour = checkHighFour(listOfAllCardsInDeckSimplified)  # Grab Higher Four of a kind number
-
-    if isAStraight and isAFlush and isAceInDeck and isKingInDeck and isQueenInDeck and isJackInDeck and is10InDeck:
-        deckValue = 10  # Royal Flush - Checked
-
-    elif isAStraight and isAFlush:
-        deckValue = 9  # Straight Flush - Checked
-
-    elif isFourOfAKind:
-        deckValue = 8  # Four of a kind - Checked
-
-    elif isThreeOfAKind and isPair:
-        deckValue = 7  # Full House - Checked
-
-    elif isAFlush:
-        deckValue = 6  # Flush - Checked
-
-    elif isAStraight:
-        deckValue = 5  # Straight - Checked
-
-    elif isThreeOfAKind:
-        deckValue = 4  # Three of a kind - Checked
-
-    elif isTwoPair:
-        deckValue = 3  # Two Pair - Checked
-
-    elif isPair:
-        deckValue = 2  # One Pair - Checked
-
-    else:
-        deckValue = 1  # HighCard - Needs to be extended
-
-    deckStats = {'HandValue': deckValue, 'Flush': isAFlush, 'FlushType': flushType, 'Straight': isAStraight,
-                 'HighCard': highCard, 'HighPair': highPair, 'HighThree': highThree, 'HighFour': highFour,
-                 'HighestCardInStraight': highestCardInStraight}
-    return deckStats
-
-
-# ---------------------------------------------------------------#
-def checkDeckStats(deck):
-    # First Two Cards
-    initialTwoCards = deck.copy()
-    sorted_TwoCards = sorted(initialTwoCards, key=lambda x: x['value'])
-
-    # Whole Deck
-    sorted_deck = sorted(deck, key=lambda x: x['value'])
-    totalList = tableCards.copy()
-    sorted_TotalList = totalList
-    sorted_TotalList.extend(sorted_deck)
-    sorted_TotalList = sorted(totalList, key=lambda x: x['value'])
-
-    listOfAllCardsInDeckSimplified = []
-
-    # Make a list all Cards and the amount of Same Cards
-    for index in sorted_TotalList:
-        listOfAllCardsInDeckSimplified.append(checkAmountOfSameCard(totalList, index))
-
-    sorted_TotalListSimplified = sorted(listOfAllCardsInDeckSimplified, key=lambda x: x['value'])
-
-    pastCard = 0
-    counter = 0
-    indexPointerList = []
-
-    # Deleting Replicas in Simplified list (1st List)
-    for index in sorted_TotalListSimplified:
-        if pastCard != 0:
-            if pastCard['value'] == index['value']:
-                indexPointerList.append(index)
+                if previousValue + 1 == value:
+                    straightCount += 1
+                    straightList.append(value)
+                else:
+                    straightCount = 1
+                    straightList.clear()
+
+                straightList.append(value)
+                previousValue = value
+
+                if straightCount == 5:
+                    player.playerDeckStatsData["HighestCardInStraight"] = value
+
+                    return True
+
+        return False
+
+    def fullHouse(self, deck, player):
+        values = [card.value for card in deck]
+        uniqueValues = set(values)
+
+        triples = []
+        pairs = []
+
+        for value in uniqueValues:
+            count = values.count(value)
+
+            if count >= 3:
+                triples.append(value)
+            elif count == 2:
+                pairs.append(value)
+
+        # Case 1: 1 triple + 1 pair
+        if len(triples) == 1 and len(pairs) >= 1:
+            player.playerDeckStatsData["HighThree"] = triples[0]
+            player.playerDeckStatsData["HighPair"] = max(pairs)
+            return True
+
+        # Case 2: 2 triples
+        elif len(triples) == 2:
+            triples.sort()
+            player.playerDeckStatsData["HighThree"] = triples[1]
+            player.playerDeckStatsData["HighPair"] = triples[0]
+            return True
+
+        return False
+
+    def straightFlushCheck(self, deck, player):  # Check if deck contains straight which is also a flush
+
+        if self.flushCheck(deck, player) is not True:  # Check if there is a flush
+            return False
+
+        # Make Local List System
+        hearts = []
+        diamonds = []
+        spades = []
+        clubs = []
+
+        for card in deck:
+            if card.suit == "♡":
+                hearts.append(card.value)
+            elif card.suit == "♢":
+                diamonds.append(card.value)
+            elif card.suit == "♠":
+                spades.append(card.value)
             else:
-                pastCard = index
-        else:
-            pastCard = index
-        counter += 1
+                clubs.append(card.value)
 
-    if len(indexPointerList) != 0:
-        for index in indexPointerList:
-            sorted_TotalListSimplified.remove(index)
+        listOfSuits = [hearts, diamonds, spades, clubs]
 
-    deckStats = checkDeckValue(sorted_TotalListSimplified, sorted_TotalList, sorted_TwoCards)
+        for suits in listOfSuits:
+            values = suits
+            values = sorted(set(values))
 
-    deckStatsData = {'HandValue': deckStats['HandValue'], 'Flush': deckStats['Flush'],
-                     'Straight': deckStats['Straight'], 'HighCard': deckStats['HighCard'],
-                     'HighPair': deckStats['HighPair'], 'HighThree': deckStats['HighThree'],
-                     'HighFour': deckStats['HighFour'], 'LowCard': sorted_TwoCards[0]['value'],
-                     'HighCardType': sorted_TwoCards[1]['type'], 'LowCardType': sorted_TwoCards[0]['type'],
-                     'FlushType': deckStats['FlushType'], 'HighestCardInStraight': deckStats['HighestCardInStraight']}  # Reset
+            straightCount = 1
+            previousValue = 0
 
-    return deckStatsData
+            countAces = values.count(14)
+            if countAces >= 1:
+                values.append(1)
+                values.sort()  # We sort the new Card
 
+            for value in values:
+                if previousValue == 0:
+                    previousValue = value
+                else:
+                    if previousValue + 1 == value:
+                        straightCount += 1
+                    else:
+                        straightCount = 1
+                    previousValue = value
 
-# ---------------------------------------------------------------#
-def newCardsPile():
-    cardPile.clear()  # Reset
+                    if straightCount == 5:
+                        player.playerDeckStatsData["HighestCardInStraight"] = value
+                        return True
+        return False
 
-    cardPile.append(c2_1), cardPile.append(c3_1), cardPile.append(c4_1)  # Diamonds
-    cardPile.append(c5_1), cardPile.append(c6_1), cardPile.append(c7_1)
-    cardPile.append(c8_1), cardPile.append(c9_1), cardPile.append(c10_1)
-    cardPile.append(c11_1), cardPile.append(c12_1), cardPile.append(c13_1)
-    cardPile.append(c14_1)
+    def royalFlushCheck(self, deck, player):
 
-    cardPile.append(c2_2), cardPile.append(c3_2), cardPile.append(c4_2)  # Hearts
-    cardPile.append(c5_2), cardPile.append(c6_2), cardPile.append(c7_2)
-    cardPile.append(c8_2), cardPile.append(c9_2), cardPile.append(c10_2)
-    cardPile.append(c11_2), cardPile.append(c12_2), cardPile.append(c13_2)
-    cardPile.append(c14_2)
+        if self.flushCheck(deck, player) is not True:  # Check if there is a flush
+            return False
 
-    cardPile.append(c2_3), cardPile.append(c3_3), cardPile.append(c4_3)  # Spades
-    cardPile.append(c5_3), cardPile.append(c6_3), cardPile.append(c7_3)
-    cardPile.append(c8_3), cardPile.append(c9_3), cardPile.append(c10_3)
-    cardPile.append(c11_3), cardPile.append(c12_3), cardPile.append(c13_3)
-    cardPile.append(c14_3)
+        if self.staightCheck(deck, player) is not True:  # Check if there is a straight
+            return False
 
-    cardPile.append(c2_4), cardPile.append(c3_4), cardPile.append(c4_4)  # Clubs
-    cardPile.append(c5_4), cardPile.append(c6_4), cardPile.append(c7_4)
-    cardPile.append(c8_4), cardPile.append(c9_4), cardPile.append(c10_4)
-    cardPile.append(c11_4), cardPile.append(c12_4), cardPile.append(c13_4)
-    cardPile.append(c14_4)
+        # Make Local List
+        hearts = []
+        diamonds = []
+        spades = []
+        clubs = []
 
+        neededValues = {10, 11, 12, 13, 14}
 
-# Cards
-c2_1 = {"value": 2, "type": "♢", "name": "2", "img": "🃂"}
-c3_1 = {"value": 3, "type": "♢", "name": "3", "img": "🃃"}
-c4_1 = {"value": 4, "type": "♢", "name": "4", "img": "🃄"}
-c5_1 = {"value": 5, "type": "♢", "name": "5", "img": "🃅"}
-c6_1 = {"value": 6, "type": "♢", "name": "6", "img": "🂦"}
-c7_1 = {"value": 7, "type": "♢", "name": "7", "img": "🂧"}
-c8_1 = {"value": 8, "type": "♢", "name": "8", "img": "🂨"}
-c9_1 = {"value": 9, "type": "♢", "name": "9", "img": "🂩"}
-c10_1 = {"value": 10, "type": "♢", "name": "10", "img": "🂪"}
-c11_1 = {"value": 11, "type": "♢", "name": "J", "img": "🂫"}
-c12_1 = {"value": 12, "type": "♢", "name": "Q", "img": "🂬"}
-c13_1 = {"value": 13, "type": "♢", "name": "K", "img": "🂮"}
-c14_1 = {"value": 14, "type": "♢", "name": "A", "img": "🂾"}
+        for card in deck:
+            if card.suit == "♡":
+                hearts.append(card.value)
+            elif card.suit == "♢":
+                diamonds.append(card.value)
+            elif card.suit == "♠":
+                spades.append(card.value)
+            else:
+                clubs.append(card.value)
 
-c2_2 = {"value": 2, "type": "♡", "name": "2", "img": "🂲"}
-c3_2 = {"value": 3, "type": "♡", "name": "3", "img": "🂳"}
-c4_2 = {"value": 4, "type": "♡", "name": "4", "img": "🂳"}
-c5_2 = {"value": 5, "type": "♡", "name": "5", "img": "🂴"}
-c6_2 = {"value": 6, "type": "♡", "name": "6", "img": "🂶"}
-c7_2 = {"value": 7, "type": "♡", "name": "7", "img": "🂷"}
-c8_2 = {"value": 8, "type": "♡", "name": "8", "img": "🂸"}
-c9_2 = {"value": 9, "type": "♡", "name": "9", "img": "🂹"}
-c10_2 = {"value": 10, "type": "♡", "name": "10", "img": "🂺"}
-c11_2 = {"value": 11, "type": "♡", "name": "J", "img": "🂫"}
-c12_2 = {"value": 12, "type": "♡", "name": "Q", "img": "🂻"}
-c13_2 = {"value": 13, "type": "♡", "name": "K", "img": "🂽"}
-c14_2 = {"value": 14, "type": "♡", "name": "A", "img": "🂾"}
+        listOfSuits = [hearts, diamonds, spades, clubs]
 
-c2_3 = {"value": 2, "type": "♠", "name": "2", "img": "🂢"}
-c3_3 = {"value": 3, "type": "♠", "name": "3", "img": "🂳"}
-c4_3 = {"value": 4, "type": "♠", "name": "4", "img": "🂴"}
-c5_3 = {"value": 5, "type": "♠", "name": "5", "img": "🂵"}
-c6_3 = {"value": 6, "type": "♠", "name": "6", "img": "🂶"}
-c7_3 = {"value": 7, "type": "♠", "name": "7", "img": "🂷"}
-c8_3 = {"value": 8, "type": "♠", "name": "8", "img": "🂸"}
-c9_3 = {"value": 9, "type": "♠", "name": "9", "img": "🂹"}
-c10_3 = {"value": 10, "type": "♠", "name": "10", "img": "🂺"}
-c11_3 = {"value": 11, "type": "♠", "name": "J", "img": "🂫"}
-c12_3 = {"value": 12, "type": "♠", "name": "Q", "img": "🂻"}
-c13_3 = {"value": 13, "type": "♠", "name": "K", "img": "🂽"}
-c14_3 = {"value": 14, "type": "♠", "name": "A", "img": "🂾"}
+        for suits in listOfSuits:
+            values = suits
+            values = sorted(set(values))
 
-c2_4 = {"value": 2, "type": "♣", "name": "2", "img": "🂢"}
-c3_4 = {"value": 3, "type": "♣", "name": "3", "img": "🂳"}
-c4_4 = {"value": 4, "type": "♣", "name": "4", "img": "🂴"}
-c5_4 = {"value": 5, "type": "♣", "name": "5", "img": "🂵"}
-c6_4 = {"value": 6, "type": "♣", "name": "6", "img": "🂶"}
-c7_4 = {"value": 7, "type": "♣", "name": "7", "img": "🂷"}
-c8_4 = {"value": 8, "type": "♣", "name": "8", "img": "🂸"}
-c9_4 = {"value": 9, "type": "♣", "name": "9", "img": "🂹"}
-c10_4 = {"value": 10, "type": "♣", "name": "10", "img": "🂺"}
-c11_4 = {"value": 11, "type": "♣", "name": "J", "img": "🂫"}
-c12_4 = {"value": 12, "type": "♣", "name": "Q", "img": "🂻"}
-c13_4 = {"value": 13, "type": "♣", "name": "K", "img": "🂽"}
-c14_4 = {"value": 14, "type": "♣", "name": "A", "img": "🂾"}
+            if neededValues.issubset(values):  # If royal flush is same as our hand
+                return True
 
+        return False
 
-# --------------------------------------------------------------#
-def reset():  # Reset Game
-    newCardsPile()
-    startingHandPlayer()
-    startingHandComputer()
-    setupTableCards()
+    def compareKickers(self, player1, player2, mainCards):
+        # mainCards = list of values forming the main hand (e.g., [9,9,9,9])
+        p1_Deck = [v for v in player1.playerDeckStatsData['FiveHighestCards'] if v not in mainCards]
+        p2_Deck = [v for v in player2.playerDeckStatsData['FiveHighestCards'] if v not in mainCards]
 
+        # Compare remaining cards descending
+        p1_Deck.sort(reverse=True)
+        p2_Deck.sort(reverse=True)
 
-# ----------------------------------------------------------------#
-def roundCounter(rounds):
-    if rounds == 1:
-        print("  _____                                _     __ ")
-        print("|  __ \                              | |   /_ |")
-        print("| |__) |   ___    _   _   _ __     __| |    | |")
-        print("|  _  /   / _ \  | | | | | '_ \   / _` |    | |")
-        print("| | \ \  | (_) | | |_| | | | | | | (_| |    | |")
-        print("|_|  \_\  \___/   \__,_| |_| |_|  \__,_|    |_|")
+        for player1Card, player2Card in zip(p1_Deck, p2_Deck):
+            if player1Card > player2Card:
+                return player1.playerName
+            elif player1Card < player2Card:
+                return player2.playerName
+        return "Tie"
 
-        print(" ______ ______ ______ ______ ______ ______ ______")
-        print("|______|______|______|______|______|______|______|")
+# -------------------------------------------------------------# -------------------------------------------------------------
+# -------------------------------------------------------------# -------------------------------------------------------------
+# -------------------------------------------------------------# -------------------------------------------------------------
+# MAIN
 
-    elif rounds == 2:
-        print("  _____                                _     ___  ")
-        print("|  __ \                              | |   |__ \ ")
-        print("| |__) |   ___    _   _   _ __     __| |      ) |")
-        print("|  _  /   / _ \  | | | | | '_ \   / _` |     / / ")
-        print("| | \ \  | (_) | | |_| | | | | | | (_| |    / /_ ")
-        print("|_|  \_\  \___/   \__,_| |_| |_|  \__,_|   |____|")
-        print(" ______ ______ ______ ______ ______ ______ ______")
-        print("|______|______|______|______|______|______|______|")
+# Player List
+Computer = Player("Computer")
+Human = Player("David")
+PlayerList = [Computer, Human]
 
-    elif rounds == 3:
-        print("  _____                                _     ____ ")
-        print("|  __ \                              | |   |___ \ ")
-        print("| |__) |   ___    _   _   _ __     __| |     __) |")
-        print("|  _  /   / _ \  | | | | | '_ \   / _` |    |__ < ")
-        print("| | \ \  | (_) | | |_| | | | | | | (_| |    ___) |")
-        print("|_|  \_\  \___/   \__,_| |_| |_|  \__,_|   |____/ ")
-        print(" ______ ______ ______ ______ ______ ______ ______")
-        print("|______|______|______|______|______|______|______|")
+# Game Class
+Poker = Game(PlayerList)
 
+# Simulate a hand for 2 players and show console output
+Poker.startGame()
 
-# ----------------------------------------------------------------#
-def game():
-    print(" _____            _                  ")
-    print("|  __ \          | |                 ")
-    print("| |__) |   ___   | | __   ___   _ __ ")
-    print("|  ___/   / _ \  | |/ /  / _ \ | '__|")
-    print("| |      | (_) | |   <  |  __/ | |   ")
-    print("|_|       \___/  |_|\_\  \___| |_|   ")
-    print("______ ______ ______ ______ ______ __")
+print("\n--- Table Cards ---")
+for card in Poker.table.tableDeck:
+    print(f"{card.value}{card.suit}{card.img}", end="  ")
+print("\n")
 
-    reset()  # Reset Game
-    print('Its all automatic, just press enter and WAIT!')
-    input('Ready? ')
-    space()
-    roundCounter(1)
-    time.sleep(1)  # Wait
+print("--- Player Hands ---")
+for player in PlayerList:
+    hand = "  ".join([f"{card.value}{card.suit}{card.img}" for card in player.playerDeck])
+    print(f"{player.playerName}: {hand}")
 
-    showAll()
-    space()
-
-    roundCounter(2)
-    time.sleep(1)  # Wait
-    newCard(tableCards)
-    showAllAfter()
-    space()
-
-    roundCounter(3)
-    time.sleep(1)  # Wait
-
-    newCard(tableCards)
-    showAllAfter()
-    winner()
-
-
-game()
+# Check winner
+winner = Poker.checkWinner()
+print("\n--- Winner ---")
+print(f"Winner: {winner['winner']}")
+print(f"Reason: {winner['reason']}")
